@@ -1,10 +1,11 @@
 import './App.css'
+import Dashboard from './components/dashboard/Dashboard'
 
 function App() {
 
   return (
     <div>
-      <h1>Admin Dashboard</h1>
+      <Dashboard />
     </div>
   )
 }
