@@ -9,28 +9,55 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "../ui/button";
 
+
+interface Users {
+    id: string;
+    tenantName: string;
+    userName: string;
+    name: string;
+    lastName: string,
+    membership_status: boolean;
+    email: string;
+    role: string;
+    phone: string
+}
+
 export default function Dashboard() {
-    const { accounts, getAccounts, updateUserStatus } = useDashboardStore();
+    const { users, getUsers, updateUserStatus } = useDashboardStore();
 
     useEffect(() => {
-        getAccounts()
-    }, []); // Dependencia vacía para que se ejecute solo al montar el componente
+        getUsers()
+    }, []);
 
-    const handleMembershipStatus = async (userId: string, value: boolean) => {
-        const status = !value
-        updateUserStatus(userId, status)
-    }
+    const handleMembershipStatus = async (userId: string, membership_status: boolean) => {
+        try {
+            if (!membership_status) {
+                console.log("Membresia actualizada! Disfrute del software", membership_status)
+            } else {
+                console.log("Membresia vencida! Debe pagar para poder seguir usando el software", membership_status)
+            }
+            await updateUserStatus(userId, !membership_status); // El estado en Zustand ya se actualiza
+        } catch (error) {
+            console.error("Error al actualizar el estado de membresía:", error);
+        }
+    };
 
-    const filteredAccounts = accounts.filter((account) => account.role === "OWNER")
 
-    const columns: ColumnDef<any>[] = [
+    const filteredAccounts = users.filter((user) => user.role === "OWNER")
+
+    const columns: ColumnDef<Users>[] = [
+        {
+            header: "Dueño",
+            accessorKey: "name",
+            cell: fullname => `${fullname.row.original.name} ${fullname.row.original.lastName}`
+        },
         {
             header: "Compañia",
             accessorKey: "tenantName",
         },
         {
-            header: "Dueño",
-            accessorKey: "name",
+            header: "Nombre de Usuario",
+            accessorKey: "userName",
         },
         {
             header: "Email",
@@ -50,21 +77,27 @@ export default function Dashboard() {
         },
         {
             header: "Edit Membership Status",
-            cell: ({ row }) => (
-                <Button
-                    onClick={() =>
-                        handleMembershipStatus(
-                            row.original.id,
-                            row.original.membership_status
-                        )
-                    }
-                    className="px-3 py-1 bg-blue-500 text-white rounded-md"
-                >
-                    {row.original.membership_status
-                        ? "Inactivate"
-                        : "Activate"}
-                </Button>
-            )
+            accessorKey: "",
+            cell: ({ row }) => {
+                return (
+                    <Button
+                        onMouseDown={() =>
+                            handleMembershipStatus(
+                                row.original.id,
+                                row.original.membership_status
+                            )
+                        }
+                        className="px-3 py-1 bg-blue-500 text-white rounded-md cursor-pointer"
+                        variant="default"
+                        disabled={false}
+
+                    >
+                        {row.original.membership_status
+                            ? "Inactivate"
+                            : "Activate"}
+                    </Button>
+                )
+            }
         },
     ];
 
