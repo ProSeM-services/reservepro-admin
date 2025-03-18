@@ -1,12 +1,18 @@
 import { create } from 'zustand'
-const BASE_URL = import.meta.env.VITE_BASE_URL;
 import axios from 'axios'
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-// Definir interfaces para tipar los datos
+// Definir interfaces 
 interface Users {
     id: string;
+    tenantName: string;
+    userName: string;
     name: string;
+    lastName: string,
     membership_status: boolean;
+    email: string;
+    role: string;
+    phone: string
 }
 
 interface Account {
@@ -36,7 +42,7 @@ interface IDashboard {
     getUsers: () => Promise<void>;
     getCompanies: () => Promise<void>;
     getAccounts: () => Promise<void>;
-    updateUserStatus: (userId: string, status: boolean) => Promise<void>;
+    updateUserStatus: (userId: string, membership_status: boolean) => Promise<void>;
 }
 
 export const useDashboardStore = create<IDashboard>((set) => ({
@@ -88,24 +94,21 @@ export const useDashboardStore = create<IDashboard>((set) => ({
     },
 
     // Acción: Actualizar estado de usuario (activar/inactivar)
-    updateUserStatus: async (userId, status) => {
-        set({ loading: true, error: null });
+    updateUserStatus: async (userId, membership_status) => {
         try {
-            await axios.patch(`${BASE_URL}/api/admin/users/${userId}`, { status });
+            await axios.patch(`${BASE_URL}/api/admin/users/${userId}`, { membership_status });
+
             set((state) => ({
-                accounts: state.accounts.map((account) =>
-                    account.id === userId ? { ...account, membership_status: status } : account
-                ),
                 users: state.users.map((user) =>
-                    user.id === userId ? { ...user, membership_status: status } : user
+                    user.id === userId ? { ...user, membership_status } : user
                 ),
+                loading: false
             }));
         } catch (error) {
-            set({ error: "Error al actualizar estado del usuario" });
-        } finally {
-            set({ loading: false });
+            set({ error: "Error al actualizar estado del usuario", loading: false });
         }
     },
+
 
 
 }))
