@@ -1,51 +1,43 @@
-'use client'
 import { useDashboardStore } from "../../store/useDashboardStore";
 import { useEffect } from "react";
 import {
-    useReactTable,
-    getCoreRowModel,
-    flexRender,
     ColumnDef,
 } from "@tanstack/react-table";
+import { FromatedDate } from "../../components/common/FormatedDate";
+import { ContactButton } from "../../components/common/WhatsAppIcon";
+import { RootTable } from "../../components/common/root-table";
+import DropDownMenu from "../../components/common/dropDownMenu.tsx/owner-dropDown";
 import { Button } from "../ui/button";
+import { useAuthStore } from "@/store/useAuth";
+import { useNavigate } from "react-router-dom";
 
-
-interface Users {
+interface Account {
     id: string;
-    tenantName: string;
-    userName: string;
-    name: string;
+    name: string,
     lastName: string,
+    tenantName: string;
     membership_status: boolean;
     email: string;
     role: string;
-    phone: string
+    phone: string;
+    createdAt: string;
 }
 
 export default function Dashboard() {
-    const { users, getUsers, updateUserStatus } = useDashboardStore();
+    const navigate = useNavigate()
+    const { getAccounts, accounts } = useDashboardStore();
+    const { logout } = useAuthStore()
 
     useEffect(() => {
-        getUsers()
+        getAccounts()
     }, []);
 
-    const handleMembershipStatus = async (userId: string, membership_status: boolean) => {
-        try {
-            if (!membership_status) {
-                console.log("Membresia actualizada! Disfrute del software", membership_status)
-            } else {
-                console.log("Membresia vencida! Debe pagar para poder seguir usando el software", membership_status)
-            }
-            await updateUserStatus(userId, !membership_status); // El estado en Zustand ya se actualiza
-        } catch (error) {
-            console.error("Error al actualizar el estado de membresía:", error);
-        }
-    };
+    const handleLogout = () => {
+        logout()
+        navigate("/")
+    }
 
-
-    const filteredAccounts = users.filter((user) => user.role === "OWNER")
-
-    const columns: ColumnDef<Users>[] = [
+    const columns: ColumnDef<Account>[] = [
         {
             header: "Dueño",
             accessorKey: "name",
@@ -53,7 +45,7 @@ export default function Dashboard() {
         },
         {
             header: "Compañia",
-            accessorKey: "tenantName",
+            accessorKey: "companyName",
         },
         {
             header: "Nombre de Usuario",
@@ -65,7 +57,22 @@ export default function Dashboard() {
         },
         {
             header: "Phone",
-            accessorKey: "phone"
+            accessorKey: "phone",
+            cell: ({ getValue }) => {
+                const phoneNumber = getValue<string>();
+                return (
+                    <div className="flex items-center gap-2">
+                        <ContactButton phoneNumber={phoneNumber} />
+                    </div>
+                );
+            }
+        },
+        {
+            header: "Fecha Creacion",
+            accessorKey: "createdAt",
+            cell: ({ row }) => (
+                <FromatedDate createdAt={row.original.createdAt} />
+            )
         },
         {
             header: "Membership Status",
@@ -76,64 +83,19 @@ export default function Dashboard() {
             }
         },
         {
-            header: "Edit Membership Status",
+            header: "Edit",
             accessorKey: "",
-            cell: ({ row }) => {
-                return (
-                    <Button
-                        onMouseDown={() =>
-                            handleMembershipStatus(
-                                row.original.id,
-                                row.original.membership_status
-                            )
-                        }
-                        className="px-3 py-1 bg-blue-500 text-white rounded-md cursor-pointer"
-                        variant="default"
-                        disabled={false}
-
-                    >
-                        {row.original.membership_status
-                            ? "Inactivate"
-                            : "Activate"}
-                    </Button>
-                )
-            }
+            cell: ({ row }) => (
+                <DropDownMenu key={row.original.id} account={row.original} />
+            )
         },
     ];
-
-    const table = useReactTable({
-        data: filteredAccounts,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-    });
 
     return (
         <div>
             <h2 className="text-lg font-semibold mb-4">Dashboard "SUPERADMIN"</h2>
-            <table className="table-auto w-full border-collapse border border-gray-300">
-                <thead className="bg-gray-200">
-                    {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                            {headerGroup.headers.map((header) => (
-                                <th key={header.id} className="border p-2">
-                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                </th>
-                            ))}
-                        </tr>
-                    ))}
-                </thead>
-                <tbody>
-                    {table.getRowModel().rows.map((row) => (
-                        <tr key={row.id} className="border">
-                            {row.getVisibleCells().map((cell) => (
-                                <td key={cell.id} className="border p-2">
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <Button variant={"outline"} onClick={handleLogout}>Logout</Button>
+            <RootTable columns={columns} data={accounts} />
         </div>
     );
 };
