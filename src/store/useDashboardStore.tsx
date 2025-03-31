@@ -5,7 +5,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 // Definir interfaces 
 interface Users {
     id: string;
-    tenantName: string;
+    companyName: string;
     userName: string;
     name: string;
     lastName: string,
@@ -18,12 +18,13 @@ interface Users {
 interface Account {
     id: string;
     name: string,
-    lastname: string,
+    lastName: string,
     tenantName: string;
     membership_status: boolean;
     email: string;
     role: string;
-    phone: string
+    phone: string;
+    createdAt: string;
 }
 
 interface Company {
@@ -99,6 +100,9 @@ export const useDashboardStore = create<IDashboard>((set) => ({
             await axios.patch(`${BASE_URL}/api/admin/users/${userId}`, { membership_status });
 
             set((state) => ({
+                accounts: state.accounts.map((account) =>
+                    account.id === userId ? { ...account, membership_status } : account
+                ),
                 users: state.users.map((user) =>
                     user.id === userId ? { ...user, membership_status } : user
                 ),
