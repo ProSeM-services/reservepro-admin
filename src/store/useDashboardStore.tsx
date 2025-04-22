@@ -30,6 +30,7 @@ interface Account {
 interface Company {
     id: string;
     name: string;
+    Services: []
 }
 
 // Definir el estado de Zustand con sus acciones

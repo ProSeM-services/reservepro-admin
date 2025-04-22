@@ -7,9 +7,13 @@ import { FromatedDate } from "../../components/common/FormatedDate";
 import { ContactButton } from "../../components/common/WhatsAppIcon";
 import { RootTable } from "../../components/common/root-table";
 import DropDownMenu from "../../components/common/dropDownMenu.tsx/owner-dropDown";
-import { Button } from "../ui/button";
-import { useAuthStore } from "@/store/useAuth";
+import { CardsData } from "./cards/CardsData";
+import Aside from "./aside/Aside-dashboard";
+import AsideIncomes from "./aside/Aside-incomes";
+import Navbar from "./navbard/Navbar";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/store/useAuth";
+import { Button } from "../ui/button";
 
 interface Account {
     id: string;
@@ -24,36 +28,44 @@ interface Account {
 }
 
 export default function Dashboard() {
+    const { getAccounts, getCompanies, getUsers, accounts } = useDashboardStore();
+
     const navigate = useNavigate()
-    const { getAccounts, accounts } = useDashboardStore();
     const { logout } = useAuthStore()
 
-    useEffect(() => {
-        getAccounts()
-    }, []);
 
     const handleLogout = () => {
         logout()
         navigate("/")
     }
+    useEffect(() => {
+        getAccounts()
+        getCompanies()
+        getUsers()
+    }, []);
+
+
 
     const columns: ColumnDef<Account>[] = [
         {
             header: "Dueño",
             accessorKey: "name",
-            cell: fullname => `${fullname.row.original.name} ${fullname.row.original.lastName}`
+            cell: ({ row }) => {
+                const { name, lastName, membership_status, email } = row.original;
+                return (
+                    <div className="flex items-center gap-2 justify-star w-auto">
+                        <span>{membership_status ? "🟢" : "🔴"}</span>
+                        <div className="flex flex-col">
+                            <span>{name} {lastName}</span>
+                            <p className="text-[#555]">{email}</p>
+                        </div>
+                    </div>
+                );
+            }
         },
         {
             header: "Compañia",
             accessorKey: "companyName",
-        },
-        {
-            header: "Nombre de Usuario",
-            accessorKey: "userName",
-        },
-        {
-            header: "Email",
-            accessorKey: "email",
         },
         {
             header: "Phone",
@@ -75,14 +87,6 @@ export default function Dashboard() {
             )
         },
         {
-            header: "Membership Status",
-            accessorKey: "membership_status",
-            cell: ({ getValue }) => {
-                const value = getValue()
-                return value ? "🟢 Active" : "🔴 Inactive"
-            }
-        },
-        {
             header: "Edit",
             accessorKey: "",
             cell: ({ row }) => (
@@ -92,10 +96,33 @@ export default function Dashboard() {
     ];
 
     return (
-        <div>
-            <h2 className="text-lg font-semibold mb-4">Dashboard "SUPERADMIN"</h2>
-            <Button variant={"outline"} onClick={handleLogout}>Logout</Button>
-            <RootTable columns={columns} data={accounts} />
+        <div className="flex h-screen">
+            <aside className="flex flex-col w-[20vw] px-8 gap-2">
+                <div className="flex justify-center p-5">
+                    <Button variant="ghost" onClick={handleLogout}>Logout</Button>
+                </div>
+                <hr />
+                <Aside />
+            </aside>
+            <div className="outline">
+                <div className="flex flex-col p-4">
+                    <Navbar />
+                    <section className="flex gap-4">
+                        <section className="">
+                            <div className="flex flex-row gap-4 py-4">
+                                <CardsData type="accounts" />
+                                <CardsData type="companies" />
+                                <CardsData type="users" />
+                                <CardsData type="services" />
+                            </div>
+                            <div>
+                                <RootTable columns={columns} data={accounts} />
+                            </div>
+                        </section>
+                        <AsideIncomes />
+                    </section>
+                </div>
+            </div>
         </div>
     );
 };

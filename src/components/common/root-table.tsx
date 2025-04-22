@@ -66,13 +66,9 @@ export function RootTable<TData, TValue>({
 
     return (
         <div
-            className={
-                " h-full flex-grow  flex flex-col  gap-1 relative bg-card  text-card-foreground "
-            }
+            className=" h-full flex-grow flex flex-col gap-1 relative text-card-foreground"
         >
-            <div
-                className={`rounded-md  border border-border    w-full  max-h-[100%] mx-auto   overflow-y-auto scrollbar-custom `}
-            >
+            <div className="rounded-md border border-border w-full max-h-[100%] mx-auto overflow-y-auto scrollbar-custom">
                 <Table className="table ">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
